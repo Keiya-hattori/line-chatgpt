@@ -52,21 +52,28 @@ def webhook():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     """ ユーザーのメッセージを受け取り、ChatGPTの回答を送信 """
-    user_message = event.message.text
+    try:
+        user_message = event.message.text
 
-    # ChatGPT APIにリクエスト
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": user_message}]
-    )
+        # ✅ 修正: 最新の OpenAI API に対応！
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": user_message}]
+        )
 
-    reply_text = response["choices"][0]["message"]["content"]
+        reply_text = response.choices[0].message.content  # ✅ 修正: 最新のアクセス方法
 
-    # LINEに返信
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
+        # LINEに返信
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_text)
+        )
 
+        print(f"✅ Sent reply: {reply_text}")
+
+    except Exception as e:
+        print(f"🚨 Error in handle_message: {e}")
+
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # `debug=True` で詳細なログを出す
