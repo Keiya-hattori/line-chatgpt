@@ -55,17 +55,19 @@ def handle_message(event):
     try:
         user_message = event.message.text
 
-        # 使用するモデルを選択（最初は gpt-4o）
-        model = "gpt-4o"  # 初期設定
+        # 使用するモデルを最初は gpt-4o に設定
+        model = "gpt-4o"
 
         try:
+            # 最初に gpt-4o を使ってリクエスト
             response = openai.completions.create(
                 model=model,
                 prompt=user_message
             )
-        except openai.error.RateLimitError:
-            # gpt-4o で制限エラーが発生した場合、gpt-4o-mini に切り替え
-            print("gpt-4o rate limit reached, switching to gpt-4o-mini...")
+
+        except openai.error.InsufficientQuotaError:
+            print("Insufficient quota for gpt-4o, switching to gpt-4o-mini...")
+            # gpt-4o でクォータエラーが発生した場合、gpt-4o-mini に切り替え
             model = "gpt-4o-mini"
             response = openai.completions.create(
                 model=model,
@@ -82,8 +84,8 @@ def handle_message(event):
 
         print(f"✅ Sent reply: {reply_text}")
 
-    except Exception as e:
-        print(f"🚨 Error in handle_message: {e}")
+    except openai.error.InsufficientQuotaError as e:
+        print(f"🚨 API Quota Error: {e}")
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # `debug=True` で詳細なログを出す
