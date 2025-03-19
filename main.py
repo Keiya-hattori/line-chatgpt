@@ -55,13 +55,13 @@ def handle_message(event):
     try:
         user_message = event.message.text
 
-        # ✅ 修正: 最新の OpenAI API に対応！
+        # ✅ 最新の OpenAI API に対応した書き方！
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": user_message}]
         )
 
-        reply_text = response.choices[0].message.content  # ✅ 修正: 最新のアクセス方法
+        reply_text = response["choices"][0]["message"]["content"]  # ✅ 修正: 最新のアクセス方法
 
         # LINEに返信
         line_bot_api.reply_message(
