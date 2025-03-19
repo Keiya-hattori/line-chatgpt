@@ -49,6 +49,9 @@ def webhook():
 
     return jsonify({"status": "ok"}), 200
 
+import openai
+import time
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     """ ユーザーのメッセージを受け取り、ChatGPTの回答を送信 """
@@ -60,16 +63,16 @@ def handle_message(event):
 
         try:
             # 最初に gpt-4o を使ってリクエスト
-            response = openai.completions.create(
+            response = openai.Completion.create(
                 model=model,
                 prompt=user_message
             )
 
-        except openai.error.InsufficientQuotaError:
-            print("Insufficient quota for gpt-4o, switching to gpt-4o-mini...")
-            # gpt-4o でクォータエラーが発生した場合、gpt-4o-mini に切り替え
+        except openai.RateLimitError:
+            print("Rate limit or quota exceeded for gpt-4o, switching to gpt-4o-mini...")
+            # gpt-4o で制限エラーが発生した場合、gpt-4o-mini に切り替え
             model = "gpt-4o-mini"
-            response = openai.completions.create(
+            response = openai.Completion.create(
                 model=model,
                 prompt=user_message
             )
@@ -84,8 +87,13 @@ def handle_message(event):
 
         print(f"✅ Sent reply: {reply_text}")
 
-    except openai.error.InsufficientQuotaError as e:
-        print(f"🚨 API Quota Error: {e}")
+    except openai.RateLimitError as e:
+        print(f"🚨 API Rate Limit exceeded: {e}")
+    except openai.error.APIError as e:
+        print(f"🚨 API Error: {e}")
+    except Exception as e:
+        print(f"🚨 Error in handle_message: {e}")
+
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # `debug=True` で詳細なログを出す
