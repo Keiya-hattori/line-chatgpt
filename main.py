@@ -55,13 +55,13 @@ def handle_message(event):
     try:
         user_message = event.message.text
 
-        # ✅ 最新の OpenAI API に対応した書き方！
+        # ✅ 修正: 'messages' の設定を確認（prompt → messages）
         response = openai.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": user_message}]
+            model="gpt-4o",  # 使用するモデル
+            prompt=user_message  # 'prompt' 引数を指定
         )
 
-        reply_text = response["choices"][0]["message"]["content"]  # ✅ 修正: 最新のアクセス方法
+        reply_text = response["choices"][0]["text"]  # 'text' に変更
 
         # LINEに返信
         line_bot_api.reply_message(
