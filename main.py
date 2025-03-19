@@ -52,6 +52,8 @@ def webhook():
 import openai
 import time
 
+client = openai.OpenAI()  # ✅ 最新APIの書き方
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     """ ユーザーのメッセージを受け取り、ChatGPTの回答を送信 """
@@ -62,8 +64,8 @@ def handle_message(event):
         model = "gpt-4o"
 
         try:
-            # `openai.ChatCompletion.create()` を使う（修正済み）
-            response = openai.ChatCompletion.create(
+            # ✅ `client.chat.completions.create()` を使う
+            response = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": user_message}]
             )
@@ -72,12 +74,12 @@ def handle_message(event):
             print("Rate limit or quota exceeded for gpt-4o, switching to gpt-4o-mini...")
             # gpt-4o で制限エラーが発生した場合、gpt-4o-mini に切り替え
             model = "gpt-4o-mini"
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": user_message}]
             )
 
-        reply_text = response["choices"][0]["message"]["content"]
+        reply_text = response.choices[0].message.content  # ✅ 修正済みのレスポンス取得
 
         # LINEに返信
         line_bot_api.reply_message(
@@ -93,6 +95,6 @@ def handle_message(event):
         print(f"🚨 API Error: {e}")
     except Exception as e:
         print(f"🚨 Error in handle_message: {e}")
-    
+        
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # `debug=True` で詳細なログを出す
