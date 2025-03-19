@@ -13,6 +13,12 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Flaskアプリ
 app = Flask(__name__)
 
+# 追加したコード（トップページ用）
+@app.route("/", methods=["GET"])
+def home():
+    return "LINE Chatbot is running!", 200
+
+
 # LINE Botのセットアップ
 line_bot_api = LineBotApi(LINE_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_SECRET)
