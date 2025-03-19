@@ -55,13 +55,24 @@ def handle_message(event):
     try:
         user_message = event.message.text
 
-        # ✅ 修正: 'messages' の設定を確認（prompt → messages）
-        response = openai.completions.create(
-            model="gpt-4o",  # 使用するモデル
-            prompt=user_message  # 'prompt' 引数を指定
-        )
+        # 使用するモデルを選択（最初は gpt-4o）
+        model = "gpt-4o"  # 初期設定
 
-        reply_text = response["choices"][0]["text"]  # 'text' に変更
+        try:
+            response = openai.completions.create(
+                model=model,
+                prompt=user_message
+            )
+        except openai.error.RateLimitError:
+            # gpt-4o で制限エラーが発生した場合、gpt-4o-mini に切り替え
+            print("gpt-4o rate limit reached, switching to gpt-4o-mini...")
+            model = "gpt-4o-mini"
+            response = openai.completions.create(
+                model=model,
+                prompt=user_message
+            )
+
+        reply_text = response["choices"][0]["text"]
 
         # LINEに返信
         line_bot_api.reply_message(
@@ -73,7 +84,6 @@ def handle_message(event):
 
     except Exception as e:
         print(f"🚨 Error in handle_message: {e}")
-
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # `debug=True` で詳細なログを出す
