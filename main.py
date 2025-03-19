@@ -63,7 +63,7 @@ def handle_message(event):
 
         try:
             # 最初に gpt-4o を使ってリクエスト
-            response = openai.Completion.create(
+            response = openai.completions.create(
                 model=model,
                 prompt=user_message
             )
@@ -72,7 +72,7 @@ def handle_message(event):
             print("Rate limit or quota exceeded for gpt-4o, switching to gpt-4o-mini...")
             # gpt-4o で制限エラーが発生した場合、gpt-4o-mini に切り替え
             model = "gpt-4o-mini"
-            response = openai.Completion.create(
+            response = openai.completions.create(
                 model=model,
                 prompt=user_message
             )
