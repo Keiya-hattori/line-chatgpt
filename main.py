@@ -56,7 +56,7 @@ def handle_message(event):
         user_message = event.message.text
 
         # ✅ 最新の OpenAI API に対応した書き方！
-        response = openai.ChatCompletion.create(
+        response = openai.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": user_message}]
         )
