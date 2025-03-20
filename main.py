@@ -57,7 +57,7 @@ def search_youtube():
         "q": SEARCH_QUERY,
         "type": "video",
         "maxResults": 50,  
-        "order": "relevance",  # 新しい順に取得
+        "order": "relevance",  
         "key": YOUTUBE_API_KEY
     }
 
@@ -73,10 +73,15 @@ def search_youtube():
         url = f"https://www.youtube.com/watch?v={video_id}"
         published_at = item["snippet"]["publishedAt"]  # 公開日時を取得
 
-        # 24時間以上経過した動画のみ対象
-        published_time = datetime.datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
-        if current_time - published_time > timedelta(days=1):
-            video_results.append((video_id, title, url, published_at))  # ここで追加
+    # 24時間以上経過かつ2週間以内の動画のみ対象
+    published_time = datetime.datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
+
+    time_diff = current_time - published_time
+
+    if timedelta(days=1) <= time_diff <= timedelta(days=14):  # ✅ 24時間以上 & 2週間以内
+        video_results.append((video_id, title, url, published_at))  # ここで追加
+    else:
+        print(f"⚠️ {title} は対象期間外のためスキップ（{published_at}）")
 
     return video_results
 
@@ -123,18 +128,50 @@ def get_youtube_comments(video_id):
 def analyze_comment(comment_text):
     """ChatGPTを使ってコメントの有益性を判定"""
     prompt = f"""
-    次のコメントが「本当に有益な情報」かどうか判定してください。
+   
+        役割:
+        あなたは、動画についたコメントを分析し、動画自体の有益性を判定する専門家です。
 
-    コメント: 「{comment_text}」
+        状況:
+        あなたは、最新のライフハックに関する動画のコメント欄を分析しています。
 
-    以下の基準で判断してください：
-    - コメントが感想や意見を含んでいても、それが他の人にとって役立つ、参考になる、または新しい発見を提供するものであるか？
-    - 具体的な行動を促す情報や「今すぐ試すべき」「これは知らなかった！」など、実用的な内容が含まれているか？
+        目的:
+        視聴者のコメントから、動画自体に本当に価値のある情報が含まれているかどうかを判定してください。
+
+        出力形式:
+        判定結果は以下の形式で出力してください。
+        「判定: (有益✅/有益ではない)」
+        「理由: (判定理由)」
+
+        判断基準:
+        以下の基準でコメントを分析し、判定してください。
+
+        ✅ ポジティブなリアクション:
+
+        「これは有益すぎる！」「神動画」「めちゃくちゃ役立った！」など、動画の内容に対して明確にポジティブな反応を示している場合は有益と判定する。
+        短い感想でも、動画を高く評価していると読み取れる場合は有益と判断する。
+        ✅ 驚き・感心のリアクション:
+
+        「こんな情報無料でいいの？」「えーそうなんだ、すごい！」など、動画の情報に対して感心・驚いているコメントは有益と判定する。
+        「なにこれ知らなかった、すごいな」のように、新しい情報を得た驚きが含まれている場合も有益とする。
+        ✅ 動画の独自性を示すコメント:
+
+        「この動画の情報、他のどこでも見たことない」「これ知ってる人少ないよね？」のように、動画の情報の価値を強調するコメントは有益と判定する。
+        ✅ 後悔のリアクション:
+
+        「もっと早く知りたかった」「今まで損してた！」など、動画の情報を事前に知りたかったという後悔を表しているコメントは有益とする。
+        ✅ 隠しておきたいほどの有益性:
+
+        「もうこの動画見たから消していいですよ笑」のように、「他の人に知られたくないほど価値がある」と解釈できるコメントは有益と判定する。
+        ⛔ 有益ではないと判定するコメント:
+
+        動画の内容に具体的に言及していない感想のみのコメント（例:「いいね」「面白かった」など）。
+        ただの視聴報告や雑談コメント（例:「今見てるよ！」など）。
+        動画とは関係のない話題のコメント。
+
+        コメント: 「{comment_text}」
 
 
-    判定結果:
-    - 有益なら「✅」
-    - そうでないなら「❌」
     """
 
     response = openai.chat.completions.create(  # ✅ `chat.completions.create` に修正
