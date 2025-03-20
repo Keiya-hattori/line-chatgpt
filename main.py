@@ -44,6 +44,20 @@ def webhook():
 
     return "OK", 200
 
+def get_channel_subscribers(channel_id):
+    """ 指定したチャンネルの登録者数を取得する """
+    url = "https://www.googleapis.com/youtube/v3/channels"
+    params = {
+        "part": "statistics",
+        "id": channel_id,
+        "key": YOUTUBE_API_KEY
+    }
+
+    response = requests.get(url, params=params).json()
+    
+    if "items" in response and len(response["items"]) > 0:
+        return int(response["items"][0]["statistics"].get("subscriberCount", 0))
+    return 0  # 取得できなかった場合は0を返す
 
 from datetime import datetime, timezone, timedelta  # timezoneを追加
 
@@ -62,16 +76,8 @@ def search_youtube():
     }
 
     response = requests.get(url, params=params)
-    # 🔹 デバッグ用の出力を追加
-    print(f"🌍 YouTube API リクエストURL: {response.url}")  # ✅ APIのURLを確認
-    print(f"📩 YouTube API ステータスコード: {response.status_code}")  # ✅ APIのレスポンスコード確認
+    data = response.json()
 
-    try:
-        data = response.json()
-        print(f"📊 YouTube API レスポンス（最初の3件）: {data.get('items', [])[:3]}")  # ✅ APIのレスポンスの一部を出力
-    except requests.exceptions.JSONDecodeError:
-        print("❌ APIレスポンスが正しく取得できませんでした！")
-        return []
 
     video_results = []
     current_time = datetime.datetime.now(timezone.utc) # datetime.now() に変更
@@ -87,13 +93,19 @@ def search_youtube():
 
     time_diff = current_time - published_time
 
-    if timedelta(days=1) <= time_diff <= timedelta(days=21):  # ✅ 24時間以上 & 2週間以内
-        video_results.append((video_id, title, url, published_at))  # ここで追加
-    else:
-        print(f"⚠️ {title} は対象期間外のためスキップ（{published_at}）")
+    if not (timedelta(days=1) <= time_diff <= timedelta(days=21)):
+            print(f"⚠️ {title} は対象期間外のためスキップ（{published_at}）")
+            continue
+
+        # ✅ **チャンネルの登録者数を取得**
+    subscriber_count = get_channel_subscribers(channel_id)
+    if subscriber_count < 1000:
+            print(f"⚠️ {title} は登録者数 {subscriber_count} 人のためスキップ")
+            continue
+
+    video_results.append((video_id, title, url, published_at))
 
     return video_results
-
 def get_video_comment_count(video_id):
     """動画のコメント数を取得する"""
     url = "https://www.googleapis.com/youtube/v3/videos"
