@@ -8,17 +8,26 @@ on:
   workflow_dispatch: # 手動実行を可能にする
 
 jobs:
-  run-script:
-    runs-on: ubuntu-latest # 実行環境は Ubuntu
-
+  run_script:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # コードをリポジトリからチェックアウト
-        uses: actions/checkout@v2
-      - name: Set up Python # Pythonのセットアップ
-        uses: actions/setup-python@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # Pythonのバージョンを指定
-      - name: Install dependencies # 依存関係のインストール
-        run: pip install -r requirements.txt # requirements.txt に記述されたライブラリをインストール
-      - name: Run script # スクリプトの実行
-        run: python main.py # main.py を実行
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Python script
+        env:
+          LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
+          LINE_SECRET: ${{ secrets.LINE_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python main.py
