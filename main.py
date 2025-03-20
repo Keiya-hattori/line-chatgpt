@@ -257,8 +257,10 @@ def send_article():
     except LineBotApiError as e:
         print(f"🚨 LINE送信エラー: {e}")
 
+import os
 
-### 🔹 Webサーバー起動 & ニュース送信（テスト実行） ###
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)  # LINEのWebhook用
-    send_article()  # 🔹 1回だけニュースを送信（手動実行時）
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        send_article()  # GitHub Actions では send_article() のみ実行
+    else:
+        app.run(host="0.0.0.0", port=10000)  # ローカル開発時のみ Flask を起動
