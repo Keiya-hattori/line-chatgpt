@@ -57,7 +57,7 @@ def search_youtube():
         "q": SEARCH_QUERY,
         "type": "video",
         "maxResults": 50,  
-        "order": "relevance",  
+        "order": "date",  
         "key": YOUTUBE_API_KEY
     }
 
@@ -87,7 +87,7 @@ def search_youtube():
 
     time_diff = current_time - published_time
 
-    if timedelta(days=1) <= time_diff <= timedelta(days=14):  # ✅ 24時間以上 & 2週間以内
+    if timedelta(days=1) <= time_diff <= timedelta(days=21):  # ✅ 24時間以上 & 2週間以内
         video_results.append((video_id, title, url, published_at))  # ここで追加
     else:
         print(f"⚠️ {title} は対象期間外のためスキップ（{published_at}）")
