@@ -62,7 +62,16 @@ def search_youtube():
     }
 
     response = requests.get(url, params=params)
-    data = response.json()
+    # 🔹 デバッグ用の出力を追加
+    print(f"🌍 YouTube API リクエストURL: {response.url}")  # ✅ APIのURLを確認
+    print(f"📩 YouTube API ステータスコード: {response.status_code}")  # ✅ APIのレスポンスコード確認
+
+    try:
+        data = response.json()
+        print(f"📊 YouTube API レスポンス（最初の3件）: {data.get('items', [])[:3]}")  # ✅ APIのレスポンスの一部を出力
+    except requests.exceptions.JSONDecodeError:
+        print("❌ APIレスポンスが正しく取得できませんでした！")
+        return []
 
     video_results = []
     current_time = datetime.datetime.now(timezone.utc) # datetime.now() に変更
