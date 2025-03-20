@@ -2,7 +2,7 @@ name: Run Python script periodically # ワークフローの名前
 
 on:
   schedule:
-    - cron: '0 9,18,21 * * *' # 毎日 9時, 18時, 21時 (UTC) に実行
+    - cron: '0 9,18,24 * * *' # 毎日 9時, 18時, 24時 (UTC) に実行
   workflow_dispatch: # 手動実行を可能にする
 
 jobs:
