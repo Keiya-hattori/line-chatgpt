@@ -57,7 +57,7 @@ def search_youtube():
         "q": SEARCH_QUERY,
         "type": "video",
         "maxResults": 50,  
-        "order": "date",  # 新しい順に取得
+        "order": "relevance",  # 新しい順に取得
         "key": YOUTUBE_API_KEY
     }
 
@@ -66,17 +66,32 @@ def search_youtube():
 
     video_results = []
     current_time = datetime.datetime.now(timezone.utc) # datetime.now() に変更
+    next_page_token = None  # ページネーション用
 
-    for item in data.get("items", []):
-        video_id = item["id"]["videoId"]
-        title = item["snippet"]["title"]
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        published_at = item["snippet"]["publishedAt"]  # 公開日時を取得
+    for _ in range(2):  # 50件 × 4回 = 最大200件取得
+        if next_page_token:
+            params["pageToken"] = next_page_token  # 次のページをリクエスト
+        
+        response = requests.get(url, params=params)
+        data = response.json()
 
-        # 24時間以上経過した動画のみ対象
-        published_time = datetime.datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
-        if current_time - published_time > timedelta(days=1):
-            video_results.append((video_id, title, url, published_at))  # ここで追加
+        if "items" not in data:
+            break  # これ以上取得できない場合は終了
+
+        for item in data["items"]:
+            video_id = item["id"]["videoId"]
+            title = item["snippet"]["title"]
+            url = f"https://www.youtube.com/watch?v={video_id}"
+            published_at = item["snippet"]["publishedAt"]
+
+            # 24時間以上経過した動画のみ対象
+            published_time = datetime.datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
+            if current_time - published_time > timedelta(days=1):
+                video_results.append((video_id, title, url, published_at))
+
+        next_page_token = data.get("nextPageToken")  # 次のページがあるか取得
+        if not next_page_token:
+            break  # 次のページがなければ終了
 
     return video_results
 
