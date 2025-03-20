@@ -1,23 +1,22 @@
-name: Run Python script periodically
+name: Run Python script periodically # ワークフローの名前
 
 on:
   schedule:
-    - cron: '0 9,18,24 * * 0-6' # 毎日曜～土の9時、18時、24時に実行
-  workflow_dispatch: # 手動で実行するためのオプション（任意）
+    - cron: '0 9,18,21 * * *' # 毎日 9時, 18時, 21時 (UTC) に実行
+  workflow_dispatch: # 手動実行を可能にする
 
 jobs:
   run-script:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # 実行環境は Ubuntu
+
     steps:
-      - name: Checkout code
+      - name: Checkout code # コードをリポジトリからチェックアウト
         uses: actions/checkout@v2
-      - name: Set up Python
+      - name: Set up Python # Pythonのセットアップ
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Run script
-        run: |
-          python main.py
+          python-version: '3.9' # Pythonのバージョンを指定
+      - name: Install dependencies # 依存関係のインストール
+        run: pip install -r requirements.txt # requirements.txt に記述されたライブラリをインストール
+      - name: Run script # スクリプトの実行
+        run: python main.py # main.py を実行
